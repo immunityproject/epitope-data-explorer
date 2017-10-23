@@ -2,20 +2,24 @@ import React, { Component } from 'react';
 import { Link, Switch, Route } from 'react-router-dom'
 
 import Home from './Home';
-import About from './About';
+import Downloads from './Downloads';
 import Epitopes from './Epitopes';
 
 import './App.css';
 import logo from './logo.svg';
 
 const Main = () => (
-  <main>
-    <Switch>
-      <Route exact path='/' component={Home}/>
-      <Route path='/epitopes' component={Epitopes}/>
-      <Route path='/about' component={About}/>
-    </Switch>
-  </main>
+  <section id='content'>
+    <div class='inner content'>
+      <main>
+        <Switch>
+          <Route exact path='/' component={Home}/>
+          <Route path='/epitopes' component={Epitopes}/>
+          <Route path='/downloads' component={Downloads}/>
+        </Switch>
+      </main>
+    </div>
+  </section>
 )
 
 // The Header creates links that can be used to navigate
@@ -28,7 +32,7 @@ const Header = () => (
         <ul class='nav'>
           <li><Link to='/'>Home</Link></li>
           <li><Link to='/epitopes'>Epitopes</Link></li>
-          <li><Link to='/about'>About</Link></li>
+          <li><Link to='/downloads'>Downloads</Link></li>
         </ul>
       </nav>
     </div>
