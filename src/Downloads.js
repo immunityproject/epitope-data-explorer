@@ -8,7 +8,8 @@ const Downloads = () => (
     <ol>
       <li>
         <a href="/foldx-results-all.zip">foldx-results-all.zip</a>&mdash;All
-        of the foldx data. (39G, sha256sum: )
+        of the foldx data. (39G, sha256sum:
+        c74f20a3a19ede76c5567cc3aeb7c6ca1538fdeb5706863cd5c60b57e8ed10fb)
       </li>
       <li>
         <a href="/foldx-results-P17.zip">foldx-results-P17.zip</a>&mdash;The
