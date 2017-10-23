@@ -21,14 +21,17 @@ const Main = () => (
 // The Header creates links that can be used to navigate
 // between routes.
 const Header = () => (
-  <header>
-    <nav>
-      <ul>
-        <li><Link to='/'>Home</Link></li>
-        <li><Link to='/epitopes'>Epitopes</Link></li>
-        <li><Link to='/about'>About</Link></li>
-      </ul>
-    </nav>
+  <header id='header'>
+    <div class='inner clearfix'>
+      <h1>Epitope Data Explorer</h1>
+      <nav>
+        <ul class='nav'>
+          <li><Link to='/'>Home</Link></li>
+          <li><Link to='/epitopes'>Epitopes</Link></li>
+          <li><Link to='/about'>About</Link></li>
+        </ul>
+      </nav>
+    </div>
   </header>
 )
 
