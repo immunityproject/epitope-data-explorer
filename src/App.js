@@ -1,4 +1,4 @@
-import React, { Component } from 'react';
+import React from 'react';
 import { Link, Switch, Route } from 'react-router-dom'
 
 import Home from './Home';
@@ -6,11 +6,10 @@ import Downloads from './Downloads';
 import Epitopes from './Epitopes';
 
 import './App.css';
-import logo from './logo.svg';
 
 const Main = () => (
   <section id='content'>
-    <div class='inner content'>
+    <div className='inner content'>
       <main>
         <Switch>
           <Route exact path='/' component={Home}/>
@@ -26,10 +25,10 @@ const Main = () => (
 // between routes.
 const Header = () => (
   <header id='header'>
-    <div class='inner clearfix'>
+    <div className='inner clearfix'>
       <h1>Epitope Data Explorer</h1>
       <nav>
-        <ul class='nav'>
+        <ul className='nav'>
           <li><Link to='/'>Home</Link></li>
           <li><Link to='/epitopes'>Epitopes</Link></li>
           <li><Link to='/downloads'>Downloads</Link></li>
