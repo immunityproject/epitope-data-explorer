@@ -90,8 +90,8 @@ class Epitope extends React.Component{
     return (
         <div>
           <h1>{this.state.name} (#{this.state.number})</h1>
+          <Link to='/epitopes'>Go Back</Link>
           <p>{datastr}</p>
-          <Link to='/epitopes'>Back</Link>
         </div>
     );
   }
