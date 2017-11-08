@@ -177,11 +177,14 @@ class EpitopeHistogram extends React.Component {
         x => x >= start && x <= end);
     let seriesdata = [];
     sites.forEach(function (site) {
+      let energyvec = [site_data[site][0].wt]
       site_data[site].forEach(function(x) {
-        seriesdata.push([ x.mutation + '/' + x.wt, parseFloat(x.energyDelta)])
+        energyvec.push(parseFloat(x.energyDelta))
       })
+      seriesdata.push(energyvec)
     });
-    const chartdata = [['Mut/WT', 'Energy Delta']].concat(seriesdata);
+    const mutations = Object.values(site_data[sites[0]]).map(s => s.mutation)
+    const chartdata = [['WT'].concat(mutations)].concat(seriesdata);
 
     return (
         <div style={{fontFamily:'sans-serif',fontSize:'0.8em'}}>
@@ -194,9 +197,10 @@ class EpitopeHistogram extends React.Component {
           sites={this.state.sites}/>
         <br /><br />
         <Chart
-          chartType="ColumnChart"
+          chartType="ComboChart"
           data={chartdata}
-          options={{}}
+          options={{"hAxis":{"title": "WT"}, "seriesType": "bars",
+                    "vAxis":{"title": "energy"}}}
           graph_id="ColumnChart"
           width="100%"
           height="600px"
