@@ -2,6 +2,8 @@ import React from 'react';
 import axios from 'axios';
 import { Switch, Route } from 'react-router-dom';
 import { Chart } from 'react-google-charts';
+import vis from 'vis';
+
 
 // TODO: Load a configuration file with this information to
 //       populate the epitope API.
@@ -73,6 +75,23 @@ class SiteList extends React.Component {
   }
 }
 
+class ThreeDGraph extends React.Component {
+
+  componentDidMount() {
+    const graph = new vis.Graph3d(this.refs.threedgraph, this.props.data,
+                                  this.props.options);
+  }
+
+  componentDidUpdate() {
+    const graph = new vis.Graph3d(this.refs.threedgraph, this.props.data,
+                                  this.props.options);
+  }
+
+  render() {
+    return (<div ref="threedgraph"></div>);
+  }
+}
+
 // EpitopeHistogram generates a link for each epitope
 class EpitopeHistogram extends React.Component {
 
@@ -124,7 +143,7 @@ class EpitopeHistogram extends React.Component {
       sites: sites,
       data: this.state.data,
       startsite: sites[0],
-      endsite: sites[0]
+      endsite: sites[sites.length-1]
     });
   }
 
@@ -184,7 +203,49 @@ class EpitopeHistogram extends React.Component {
       seriesdata.push(energyvec)
     });
     const mutations = Object.values(site_data[sites[0]]).map(s => s.mutation)
+    const wts = Object.values(site_data).map(s => s[0].wt)
     const chartdata = [['WT'].concat(mutations)].concat(seriesdata);
+
+    let data3d = new vis.DataSet();
+    sites.forEach(function (site) {
+      site_data[site].forEach(function(x) {
+        const value = parseFloat(x.energyDelta);
+        data3d.add({
+          x: mutations.indexOf(x.mutation),
+          y: wts.indexOf(x.wt),
+          z: value,
+          style: value
+        });
+      })
+    });
+
+    let data3draw = []
+    sites.forEach(function (site) {
+      site_data[site].forEach(function(x) {
+        const value = parseFloat(x.energyDelta);
+        data3draw.push({
+          x: mutations.indexOf(x.mutation),
+          y: wts.indexOf(x.wt),
+          z: value,
+          style: value
+        });
+      })
+    });
+
+    const options3d = {
+      width:  '600px',
+      height: '600px',
+      style: 'surface',
+      showPerspective: true,
+      showGrid: true,
+      showShadow: false,
+      keepAspectRatio: true,
+      verticalRatio: 0.5,
+      xStep: 1,
+      yStep: 1,
+      xValueLabel: function(x) { return mutations[x]; },
+      yValueLabel: function(y) { return wts[y]; }
+    };
 
     return (
         <div style={{fontFamily:'sans-serif',fontSize:'0.8em'}}>
@@ -206,6 +267,8 @@ class EpitopeHistogram extends React.Component {
           height="600px"
           legend_toggle
         />
+        Data3D: {JSON.stringify(data3draw)}
+        <ThreeDGraph options={options3d} data={data3d} />
         </div>
     )
   }
