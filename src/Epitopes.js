@@ -211,17 +211,6 @@ class EpitopeHistogram extends React.Component {
   }
 }
 
-        // <Chart
-        //   chartType="ColumnChart"
-        //   data={chartdata}
-        //   options={{}}
-        //   graph_id="ColumnChart"
-        //   width="100%"
-        //   height="400px"
-        //   legend_toggle
-        // />
-
-
 // The Listing component matches one of two different routes
 // depending on the full pathname
 const Epitopes = () => (
