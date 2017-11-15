@@ -80,15 +80,106 @@ class ThreeDGraph extends React.Component {
   componentDidMount() {
     const graph = new vis.Graph3d(this.refs.threedgraph, this.props.data,
                                   this.props.options);
+    if (graph == null) {
+      alert('Could not generate 3d graph!');
+    }
   }
 
   componentDidUpdate() {
     const graph = new vis.Graph3d(this.refs.threedgraph, this.props.data,
                                   this.props.options);
+    if (graph == null) {
+      alert('Could not generate 3d graph!');
+    }
   }
 
   render() {
-    return (<div ref="threedgraph"></div>);
+    return (<div ref="threedgraph" style={{"border": "1px solid black"}}></div>);
+  }
+}
+
+class Visualization extends React.Component {
+
+  two_d_visual() {
+    const site_data = this.props.site_data;
+    const sites = this.props.sites;
+    let seriesdata = [];
+    sites.forEach(function (site) {
+      let energyvec = [site_data[site][0].wt]
+      site_data[site].forEach(function(x) {
+        energyvec.push(parseFloat(x.energyDelta))
+      })
+      seriesdata.push(energyvec)
+    });
+    const mutations = Object.values(site_data[sites[0]]).map(s => s.mutation)
+    const chartdata = [['WT'].concat(mutations)].concat(seriesdata);
+
+    return (
+        <Chart
+          chartType="ComboChart"
+          data={chartdata}
+          options={{"hAxis":{"title": "Wild Type"}, "seriesType": "bars",
+                    "vAxis":{"title": "Energy Delta"},
+                    "chartArea":{
+                      "left": "75",
+                      "top": "10",
+                      "right": "125",
+                      "width": "100%",
+                      "height": "525",
+                    }}}
+          graph_id="ColumnChart"
+          width="100%"
+          height="600px"
+        />
+    );
+  }
+
+  three_d_visual() {
+    const sites = this.props.sites;
+    const site_data = this.props.site_data;
+    const mutations = this.props.mutations;
+    const wts = this.props.wts;
+
+    let data3d = new vis.DataSet();
+    sites.forEach(function (site) {
+      site_data[site].forEach(function(x) {
+        const value = parseFloat(x.energyDelta);
+        data3d.add({
+          x: mutations.indexOf(x.mutation),
+          y: wts.indexOf(x.wt),
+          z: value,
+          style: value
+        });
+      })
+    });
+
+    const options3d = {
+      width:  '100%',
+      height: '600px',
+      style: 'surface',
+      showPerspective: true,
+      showGrid: true,
+      showShadow: false,
+      keepAspectRatio: true,
+      verticalRatio: 0.5,
+      xStep: 1,
+      yStep: 1,
+      xValueLabel: function(x) { return mutations[x]; },
+      yValueLabel: function(y) { return wts[y]; }
+    };
+
+    return (
+        <ThreeDGraph options={options3d} data={data3d} />
+    );
+  }
+
+
+  render() {
+    if (this.props.vistype === '2D') {
+      return this.two_d_visual();
+    } else {
+      return this.three_d_visual();
+    }
   }
 }
 
@@ -105,7 +196,7 @@ class EpitopeHistogram extends React.Component {
       selected_mutation: 0,
       sites: [],
       vistypes: ['2D', '3D'],
-      vistype: '2D',
+      vistype: '3D',
       startsite: 0,
       endsite: 0
     };
@@ -203,58 +294,8 @@ class EpitopeHistogram extends React.Component {
     const site_data = this.state.data[epitope][mutation]['energies'][epitope];
     const sites = Object.keys(site_data).filter(
         x => x >= start && x <= end);
-    let seriesdata = [];
-    sites.forEach(function (site) {
-      let energyvec = [site_data[site][0].wt]
-      site_data[site].forEach(function(x) {
-        energyvec.push(parseFloat(x.energyDelta))
-      })
-      seriesdata.push(energyvec)
-    });
     const mutations = Object.values(site_data[sites[0]]).map(s => s.mutation)
     const wts = Object.values(site_data).map(s => s[0].wt)
-    const chartdata = [['WT'].concat(mutations)].concat(seriesdata);
-
-    let data3d = new vis.DataSet();
-    sites.forEach(function (site) {
-      site_data[site].forEach(function(x) {
-        const value = parseFloat(x.energyDelta);
-        data3d.add({
-          x: mutations.indexOf(x.mutation),
-          y: wts.indexOf(x.wt),
-          z: value,
-          style: value
-        });
-      })
-    });
-
-    let data3draw = []
-    sites.forEach(function (site) {
-      site_data[site].forEach(function(x) {
-        const value = parseFloat(x.energyDelta);
-        data3draw.push({
-          x: mutations.indexOf(x.mutation),
-          y: wts.indexOf(x.wt),
-          z: value,
-          style: value
-        });
-      })
-    });
-
-    const options3d = {
-      width:  '600px',
-      height: '600px',
-      style: 'surface',
-      showPerspective: true,
-      showGrid: true,
-      showShadow: false,
-      keepAspectRatio: true,
-      verticalRatio: 0.5,
-      xStep: 1,
-      yStep: 1,
-      xValueLabel: function(x) { return mutations[x]; },
-      yValueLabel: function(y) { return wts[y]; }
-    };
 
     return (
         <div style={{fontFamily:'sans-serif',fontSize:'0.8em'}}>
@@ -272,23 +313,8 @@ class EpitopeHistogram extends React.Component {
         Visualization Type: <SiteList value={this.state.vistype}
                                 onChange={this.changeVisType}
                                 sites={this.state.vistypes} />
-        <Chart
-          chartType="ComboChart"
-          data={chartdata}
-          options={{"hAxis":{"title": "Wild Type"}, "seriesType": "bars",
-                    "vAxis":{"title": "Energy Delta"},
-                    "chartArea":{
-                      "left": "75",
-                      "top": "10",
-                      "right": "125",
-                      "width": "100%",
-                      "height": "525",
-                    }}}
-          graph_id="ColumnChart"
-          width="100%"
-          height="600px"
-        />
-        <ThreeDGraph options={options3d} data={data3d} />
+        <Visualization site_data={site_data} sites={sites} mutations={mutations}
+            wts={wts} vistype={this.state.vistype} />
         </div>
     )
   }
