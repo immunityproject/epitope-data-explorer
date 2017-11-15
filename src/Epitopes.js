@@ -267,7 +267,6 @@ class EpitopeHistogram extends React.Component {
           height="600px"
           legend_toggle
         />
-        Data3D: {JSON.stringify(data3draw)}
         <ThreeDGraph options={options3d} data={data3d} />
         </div>
     )
