@@ -104,6 +104,8 @@ class EpitopeHistogram extends React.Component {
       mutations: [],
       selected_mutation: 0,
       sites: [],
+      vistypes: ['2D', '3D'],
+      vistype: '2D',
       startsite: 0,
       endsite: 0
     };
@@ -157,7 +159,7 @@ class EpitopeHistogram extends React.Component {
       selected_mutation: mutation,
       sites: sites,
       startsite: sites[0],
-      endsite: sites[0]
+      endsite: sites[sites.length-1]
     })
   }
 
@@ -176,6 +178,13 @@ class EpitopeHistogram extends React.Component {
     this.setState({
       startsite: start,
       endsite: end
+    })
+  }
+
+  changeVisType = (event) => {
+    const vtype = event.target.value;
+    this.setState({
+      vistype: vtype
     })
   }
 
@@ -249,23 +258,35 @@ class EpitopeHistogram extends React.Component {
 
     return (
         <div style={{fontFamily:'sans-serif',fontSize:'0.8em'}}>
-        <EpitopeList value={this.state.number} onChange={this.changeEpitope} />
-        <MutationList value={this.state.selected_mutation}
-          mutations={this.state.mutations} onChange={this.changeMutation} />
-        <SiteList value={this.state.startsite} onChange={this.changeStartSite}
-          sites={this.state.sites}/>
-        <SiteList value={this.state.endsite} onChange={this.changeEndSite}
-          sites={this.state.sites}/>
-        <br /><br />
+        Epitope: <EpitopeList value={this.state.number}
+                     onChange={this.changeEpitope} />
+        Mutation Protein: <MutationList value={this.state.selected_mutation}
+                              mutations={this.state.mutations}
+                              onChange={this.changeMutation} />
+        Start Site: <SiteList value={this.state.startsite}
+                        onChange={this.changeStartSite}
+                        sites={this.state.sites}/>
+        End Site: <SiteList value={this.state.endsite}
+                      onChange={this.changeEndSite}
+                      sites={this.state.sites}/>
+        Visualization Type: <SiteList value={this.state.vistype}
+                                onChange={this.changeVisType}
+                                sites={this.state.vistypes} />
         <Chart
           chartType="ComboChart"
           data={chartdata}
-          options={{"hAxis":{"title": "WT"}, "seriesType": "bars",
-                    "vAxis":{"title": "energy"}}}
+          options={{"hAxis":{"title": "Wild Type"}, "seriesType": "bars",
+                    "vAxis":{"title": "Energy Delta"},
+                    "chartArea":{
+                      "left": "75",
+                      "top": "10",
+                      "right": "125",
+                      "width": "100%",
+                      "height": "525",
+                    }}}
           graph_id="ColumnChart"
           width="100%"
           height="600px"
-          legend_toggle
         />
         <ThreeDGraph options={options3d} data={data3d} />
         </div>
