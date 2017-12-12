@@ -21,16 +21,16 @@ const EpitopeAPI = {
   ],
   all: function() { return this.proteins},
   get: function(id) {
-    const isEpitope = e => e.number === id;
-    return this.proteins.find(isEpitope);
+    const isProtein = p => p.number === id;
+    return this.proteins.find(isProtein);
   }
 }
 
-class EpitopeList extends React.Component {
+class ProteinList extends React.Component {
   render() {
     return (
         <select value={this.props.value} onChange={this.props.onChange}>
-        <option value='0'>Select an Epitope</option>
+        <option value='0'>Select a Protein</option>
         {
           EpitopeAPI.all().map(e => (
               <option key={e.number} value={e.number}>
@@ -43,14 +43,14 @@ class EpitopeList extends React.Component {
   }
 }
 
-class MutationList extends React.Component {
+class EpitopeList extends React.Component {
   render() {
     return (
         <select value={this.props.value} onChange={this.props.onChange}>
         {
-          this.props.mutations.map((m, i) => (
-              <option key={i} value={m}>
-                {m}
+          this.props.epitopes.map((e, i) => (
+              <option key={i} value={e}>
+                {e}
               </option>
           ))
         }
@@ -64,9 +64,9 @@ class SiteList extends React.Component {
     return (
         <select value={this.props.value} onChange={this.props.onChange}>
         {
-          this.props.sites.map((m, i) => (
-              <option key={i} value={m}>
-                {m}
+          this.props.sites.map((s, i) => (
+              <option key={i} value={s}>
+                {s}
               </option>
           ))
         }
@@ -105,13 +105,19 @@ class Visualization extends React.Component {
     const sites = this.props.sites;
     let seriesdata = [];
     sites.forEach(function (site) {
-      let energyvec = [site_data[site][0].wt]
-      site_data[site].forEach(function(x) {
-        energyvec.push(parseFloat(x.energyDelta))
-      })
-      seriesdata.push(energyvec)
+      for (var wild_type in site_data[site]) {
+        if (wild_type === 'entropy') {
+          continue;
+        }
+        let energyvec = [wild_type + '(' + site + ')'];
+        for (var mut_aa in site_data[site][wild_type]) {
+          const d = site_data[site][wild_type][mut_aa];
+          energyvec.push(parseFloat(d['energy_delta']));
+        }
+        seriesdata.push(energyvec)
+      }
     });
-    const mutations = Object.values(site_data[sites[0]]).map(s => s.mutation)
+    const mutations = this.props.mutations;
     const chartdata = [['WT'].concat(mutations)].concat(seriesdata);
 
     return (
@@ -137,20 +143,27 @@ class Visualization extends React.Component {
   three_d_visual() {
     const sites = this.props.sites;
     const site_data = this.props.site_data;
-    const mutations = this.props.mutations;
+    const mut_aas = this.props.mutations;
     const wts = this.props.wts;
 
     let data3d = new vis.DataSet();
     sites.forEach(function (site) {
-      site_data[site].forEach(function(x) {
-        const value = parseFloat(x.energyDelta);
-        data3d.add({
-          x: mutations.indexOf(x.mutation),
-          y: wts.indexOf(x.wt),
-          z: value,
-          style: value
-        });
-      })
+      for (var wild_type in site_data[site]) {
+        if (wild_type === 'entropy') {
+          continue;
+        }
+        for (var mut_aa in site_data[site][wild_type]) {
+          const d = site_data[site][wild_type][mut_aa];
+          const value = parseFloat(d['energy_delta']);
+          const data = {
+            x: mut_aas.indexOf(mut_aa),
+            y: wts.indexOf(wild_type),
+            z: value,
+            style: value
+          };
+          data3d.add(data);
+        }
+      }
     });
 
     const options3d = {
@@ -164,8 +177,8 @@ class Visualization extends React.Component {
       verticalRatio: 0.5,
       xStep: 1,
       yStep: 1,
-      xValueLabel: function(x) { return mutations[x]; },
-      yValueLabel: function(y) { return wts[y]; }
+      xValueLabel: function(x) { return mut_aas[x]; },
+      yValueLabel: function(y) { return wts[y] + '(' + sites[y] + ')'; }
     };
 
     return (
@@ -192,8 +205,8 @@ class EpitopeHistogram extends React.Component {
       number: 0,
       name: '',
       data: null,
-      mutations: [],
-      selected_mutation: 0,
+      epitopes: [],
+      selected_epitope: 0,
       sites: [],
       vistypes: ['2D', '3D'],
       vistype: '3D',
@@ -203,7 +216,7 @@ class EpitopeHistogram extends React.Component {
 
     // Now load protein data using axios promise interface
     // TODO: Make the base path to the data configurable
-    axios.get('/P17').then(res => {
+    axios.get('/EpitopeData.json').then(res => {
       this.setState({
         data: res.data
       });
@@ -212,27 +225,39 @@ class EpitopeHistogram extends React.Component {
     });
   }
 
-  changeEpitope = (event) => {
+  getEpitopes = (pdata) => {
+    let epitopes = [];
+    for (var e in pdata) {
+      for (var site in pdata[e]) {
+        if (pdata[e][site]['entropy'] === 'None') {
+          break;
+        } else {
+          epitopes.push(e);
+          break;
+        }
+      }
+    }
+    return epitopes;
+  }
+
+  changeProtein = (event) => {
     if (event.target.value === '0') {
       return
     }
-    // The target Epitope name/id
-    const epitope = EpitopeAPI.get(parseInt(event.target.value, 10));
-    // Shortcut to the epitope data we care about
-    const edata = this.state.data[epitope.name]
-    // List of valid mutations
-    const mutations = (Object.keys(this.state.data[epitope.name]).filter(
-      mutation =>
-        edata[mutation]['energies'][epitope.name] != null)).sort();
-    // List of sites inside these valid mutations
-    const sites = (Object.keys(
-      edata[mutations[0]]['energies'][epitope.name])).sort((a, b) => a - b)
+    // The target Protein name/id
+    const protein = EpitopeAPI.get(parseInt(event.target.value, 10));
+    // Shortcut to the protein data we care about
+    const pdata = this.state.data[protein.name]
+    // List of all valid epitopes in data
+    const epitopes = this.getEpitopes(pdata);
+    // List of sites inside first epitope
+    const sites = Object.keys(pdata[epitopes[0]]).sort((a, b) => a - b)
 
     this.setState({
-      number: epitope.number,
-      name: epitope.name,
-      mutations: mutations,
-      selected_mutation: mutations[0],
+      number: protein.number,
+      name: protein.name,
+      epitopes: epitopes,
+      selected_epitope: epitopes[0],
       sites: sites,
       data: this.state.data,
       startsite: sites[0],
@@ -240,14 +265,13 @@ class EpitopeHistogram extends React.Component {
     });
   }
 
-  changeMutation = (event) => {
-    const epitope = this.state.name;
-    const mutation = event.target.value;
-    const mdata = this.state.data[epitope][mutation];
-    const sites = (Object.keys(
-      mdata['energies'][epitope])).sort((a, b) => a - b);
+  changeEpitope = (event) => {
+    const protein = this.state.name;
+    const epitope = event.target.value;
+    const edata = this.state.data[protein][epitope];
+    const sites = Object.keys(edata).sort((a, b) => a - b);
     this.setState({
-      selected_mutation: mutation,
+      selected_epitope: epitope,
       sites: sites,
       startsite: sites[0],
       endsite: sites[sites.length-1]
@@ -279,31 +303,48 @@ class EpitopeHistogram extends React.Component {
     })
   }
 
+  getWildTypes = (sitedata, start, end) => {
+    let wts = []
+    const b = parseInt(start, 10);
+    const e = parseInt(end, 10);
+    for (var site in sitedata) {
+      const s = parseInt(site, 10);
+      if (s >= b && site <= e) {
+        wts = wts.concat(Object.keys(
+          sitedata[site]).filter(x => x !== 'entropy'));
+      }
+    }
+    return wts;
+  }
+
+
   render = () => {
     if (this.state.number === 0) {
       return (
         <div>
-        <EpitopeList value={this.state.number} onChange={this.changeEpitope} />
+          <ProteinList value={this.state.number}
+            onChange={this.changeProtein} />
         </div>
       )
     }
-    const epitope = this.state.name;
-    const mutation = this.state.selected_mutation;
+    const protein = this.state.name;
+    const epitope = this.state.selected_epitope;
     const start = this.state.startsite;
     const end = this.state.endsite;
-    const site_data = this.state.data[epitope][mutation]['energies'][epitope];
-    const sites = Object.keys(site_data).filter(
-        x => x >= start && x <= end);
-    const mutations = Object.values(site_data[sites[0]]).map(s => s.mutation)
-    const wts = Object.values(site_data).map(s => s[0].wt)
+    const site_data = this.state.data[protein][epitope];
+    const sites = this.state.sites.filter(
+      x => parseInt(x, 10) >= parseInt(start, 10)
+        && parseInt(x, 10) <= parseInt(end, 10));
+    const wts = this.getWildTypes(site_data, start, end);
+    const mutations = Object.keys(site_data[start][wts[0]]);
 
     return (
         <div style={{fontFamily:'sans-serif',fontSize:'0.8em'}}>
-        Epitope: <EpitopeList value={this.state.number}
-                     onChange={this.changeEpitope} />
-        Mutation Protein: <MutationList value={this.state.selected_mutation}
-                              mutations={this.state.mutations}
-                              onChange={this.changeMutation} />
+        Epitope: <ProteinList value={this.state.number}
+                     onChange={this.changeProtein} />
+        Mutation Protein: <EpitopeList value={this.state.selected_epitope}
+                              epitopes={this.state.epitopes}
+                              onChange={this.changeEpitope} />
         Start Site: <SiteList value={this.state.startsite}
                         onChange={this.changeStartSite}
                         sites={this.state.sites}/>
