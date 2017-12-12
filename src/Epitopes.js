@@ -100,7 +100,7 @@ class ThreeDGraph extends React.Component {
 
 class Visualization extends React.Component {
 
-  two_d_visual() {
+  two_d_visual(datasel) {
     const site_data = this.props.site_data;
     const sites = this.props.sites;
     let seriesdata = [];
@@ -112,7 +112,7 @@ class Visualization extends React.Component {
         let energyvec = [wild_type + '(' + site + ')'];
         for (var mut_aa in site_data[site][wild_type]) {
           const d = site_data[site][wild_type][mut_aa];
-          energyvec.push(parseFloat(d['energy_delta']));
+          energyvec.push(parseFloat(d[datasel]));
         }
         seriesdata.push(energyvec)
       }
@@ -140,7 +140,7 @@ class Visualization extends React.Component {
     );
   }
 
-  three_d_visual() {
+  three_d_visual(datasel) {
     const sites = this.props.sites;
     const site_data = this.props.site_data;
     const mut_aas = this.props.mutations;
@@ -154,7 +154,7 @@ class Visualization extends React.Component {
         }
         for (var mut_aa in site_data[site][wild_type]) {
           const d = site_data[site][wild_type][mut_aa];
-          const value = parseFloat(d['energy_delta']);
+          const value = parseFloat(d[datasel]);
           const data = {
             x: mut_aas.indexOf(mut_aa),
             y: wts.indexOf(wild_type),
@@ -189,9 +189,9 @@ class Visualization extends React.Component {
 
   render() {
     if (this.props.vistype === '2D') {
-      return this.two_d_visual();
+      return this.two_d_visual(this.props.datasel);
     } else {
-      return this.three_d_visual();
+      return this.three_d_visual(this.props.datasel);
     }
   }
 }
@@ -210,6 +210,8 @@ class EpitopeHistogram extends React.Component {
       sites: [],
       vistypes: ['2D', '3D'],
       vistype: '3D',
+      datasels: ['energy_delta', 'displacement'],
+      datasel: 'energy_delta',
       startsite: 0,
       endsite: 0
     };
@@ -303,6 +305,14 @@ class EpitopeHistogram extends React.Component {
     })
   }
 
+  changeDataSel = (event) => {
+    const dsel = event.target.value;
+    this.setState({
+      datasel: dsel
+    })
+  }
+
+
   getWildTypes = (sitedata, start, end) => {
     let wts = []
     const b = parseInt(start, 10);
@@ -354,8 +364,11 @@ class EpitopeHistogram extends React.Component {
         Visualization Type: <SiteList value={this.state.vistype}
                                 onChange={this.changeVisType}
                                 sites={this.state.vistypes} />
+        Data: <SiteList value={this.state.datasel} onChange={this.changeDataSel}
+                        sites={this.state.datasels} />
         <Visualization site_data={site_data} sites={sites} mutations={mutations}
-            wts={wts} vistype={this.state.vistype} />
+                       wts={wts} vistype={this.state.vistype}
+                       datasel={this.state.datasel} />
         </div>
     )
   }
