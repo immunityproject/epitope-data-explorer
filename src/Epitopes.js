@@ -1,6 +1,5 @@
 import React from 'react';
 import axios from 'axios';
-import { Switch, Route } from 'react-router-dom';
 import { Chart } from 'react-google-charts';
 import vis from 'vis';
 
@@ -374,12 +373,5 @@ class EpitopeHistogram extends React.Component {
   }
 }
 
-// The Listing component matches one of two different routes
-// depending on the full pathname
-const Epitopes = () => (
-  <Switch>
-    <Route exact path='/epitopes' component={EpitopeHistogram}/>
-  </Switch>
-)
 
-export default Epitopes
+export default EpitopeHistogram
