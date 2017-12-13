@@ -349,9 +349,9 @@ class EpitopeHistogram extends React.Component {
 
     return (
         <div style={{fontFamily:'sans-serif',fontSize:'0.8em'}}>
-        Epitope: <ProteinList value={this.state.number}
+        Protein: <ProteinList value={this.state.number}
                      onChange={this.changeProtein} />
-        Mutation Protein: <EpitopeList value={this.state.selected_epitope}
+        Epitope: <EpitopeList value={this.state.selected_epitope}
                               epitopes={this.state.epitopes}
                               onChange={this.changeEpitope} />
         Start Site: <SiteList value={this.state.startsite}
